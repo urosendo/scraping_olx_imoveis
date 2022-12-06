@@ -4,6 +4,7 @@ import json
 import re
 import math
 from tqdm import tqdm
+import concurrent.futures
 
 def get_initial_data(url):
     headers = {'user-agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36'}
@@ -59,16 +60,17 @@ for location in pbar:
     for page in range(1,location['pages']+1):
         url_location_page = f"{location['url']}&o={page}"
         ad_list = get_ad_list(url_location_page)
-        for url_ad in ad_list:
+        with concurrent.futures.ProcessPoolExecutor(max_workers=100) as executor:
+            result = executor.map(get_ad,ad_list)
+            data.extend(result)
             pbar.set_description(f"{location['name']} - {page} de {location['pages']} ({len(data)})")
-            ad = get_ad(url_ad)
-            data.append(ad)
 
-
-
-
-
-
+        
+        
+        # for url_ad in ad_list:
+        #     pbar.set_description(f"{location['name']} - {page} de {location['pages']} ({len(data)})")
+        #     ad = get_ad(url_ad)
+        #     data.append(ad)
 
 
 print(data)
